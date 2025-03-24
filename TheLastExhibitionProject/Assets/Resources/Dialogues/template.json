@@ -1,0 +1,48 @@
+{
+  "sentenceList": [
+    {
+      "id": "sentence_001",
+      "speaker": "主角",
+      "text": "这是一段测试对话内容",
+      "sprite": "character_normal",
+      "customAttributes": [
+        {
+          "key": "emotion",
+          "value": "neutral"
+        },
+        {
+          "key": "volume",
+          "value": "normal"
+        }
+      ]
+    },
+    {
+      "id": "sentence_002",
+      "speaker": "NPC",
+      "text": "这是NPC的回应",
+      "sprite": "npc_happy",
+      "customAttributes": [
+        {
+          "key": "emotion",
+          "value": "happy"
+        },
+        {
+          "key": "position",
+          "value": "right"
+        }
+      ]
+    },
+    {
+      "id": "sentence_003",
+      "speaker": "主角",
+      "text": "对话测试结束",
+      "sprite": "character_smile",
+      "customAttributes": [
+        {
+          "key": "emotion",
+          "value": "smile"
+        }
+      ]
+    }
+  ]
+}
