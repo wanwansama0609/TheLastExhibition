@@ -1,0 +1,112 @@
+{
+  "sentenceList": [
+    {
+      "id": "sentence_001",
+      "speaker": "多里安·克里斯顿",
+      "text": "马上就要十一点了……安德莉亚小姐怎么还没有到？",
+      "sprite": "",
+    },
+    {
+      "id": "sentence_002",
+      "speaker": "多里安·克里斯顿",
+      "text": "马车就快来了……",
+      "sprite": "",
+    },
+    {
+      "id": "sentence_003",
+      "speaker": "安娜贝尔·维西",
+      "text": "侦探先生！！！",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_004",
+      "speaker": "安娜贝尔·维西",
+      "text": "不好意思我来迟了！",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_005",
+      "speaker": "安娜贝尔·维西",
+      "text": "我们不会赶不上车吧？",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_006",
+      "speaker": "多里安·克里斯顿",
+      "text": "现在倒是无妨……不过，你要是再晚五分钟，可就不好说了。",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_007",
+      "speaker": "安娜贝尔·维西",
+      "text": "那先生没有等很久吧...真是不好意思。",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_008",
+      "speaker": "多里安·克里斯顿",
+      "text": "我也才刚到没多久。这次出行也不是案件调查，不必如此紧张。",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_009",
+      "speaker": "安娜贝尔·维西",
+      "text": "可我从上周起就一直在期待了！那可是布莱特爵士的博物馆酒店，一定非常豪华！听说它建在山上，景色绝佳，还能远眺大海！",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_010",
+      "speaker": "多里安·克里斯顿",
+      "text": "不只是景色……那里展出的文物，可是布莱特爵士花费五年时间收集而成的。尤其是——那遗失已久的“十大文物”。可不要浪费了这次机会。",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_011",
+      "speaker": "安娜贝尔·维西",
+      "text": "太感谢你了！侦探先生！多亏你上次帮霍华德公爵解决了那起案子，他才会邀请我们同行。听说能在这家酒店住上一晚，可不便宜呢！",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_012",
+      "speaker": "多里安·克里斯顿",
+      "text": "上次的案子，你也帮了不少忙。要不是你，的确有些棘手……那些医学知识，我可一点都不了解。",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_013",
+      "speaker": "马车夫",
+      "text": "请问是克里斯顿先生和维斯利小姐吗？",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_014",
+      "speaker": "多里安·克里斯顿",
+      "text": "是的。",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_015",
+      "speaker": "马车夫",
+      "text": "布莱特爵士已安排我来接二位，请出示邀请函，以便确认身份。",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_016",
+      "speaker": "多里安·克里斯顿",
+      "text": "当然，请容许我找一下。",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_017",
+      "speaker": "马车夫",
+      "text": "布莱特爵士已安排我来接二位，请出示邀请函，以便确认身份。",
+      "sprite": "character_smile",
+    }
+    {
+      "id": "sentence_018",
+      "speaker": "马车夫",
+      "text": "感谢您，克里斯顿先生、维斯利小姐。一切无误。布莱特爵士已为你们的行程妥善安排。请允许我引领你们登上马车。",
+      "sprite": "character_smile",
+    }
+  ]
+}
