@@ -53,7 +53,6 @@ public class DialogueController : MonoBehaviour
 
         // 初始时隐藏对话面板
         dialogueContainer.SetActive(false);
-
     }
 
     private void Update()
@@ -84,7 +83,7 @@ public class DialogueController : MonoBehaviour
         if (!displayerCache.TryGetValue(eventId, out activeDisplayer))
         {
             activeDisplayer = CreateDisplayer(eventId);
-            if (activeDisplayer != null) // 添加空检查
+            if (activeDisplayer != null)
             {
                 displayerCache[eventId] = activeDisplayer;
             }
@@ -94,9 +93,10 @@ public class DialogueController : MonoBehaviour
         {
             // 显示对话UI
             dialogueContainer.SetActive(true);
+            isDialogueActive = true;
 
             // 初始化和开始对话
-            await activeDisplayer.Initialize(eventId);
+            await activeDisplayer.Initialize();
             activeDisplayer.StartDialogue();
         }
         else
@@ -112,9 +112,9 @@ public class DialogueController : MonoBehaviour
     /// <returns>对话显示器实例</returns>
     private DialogueDisplayBase CreateDisplayer(string eventId)
     {
-        DialogueDisplayBase newDisplayer;
+        DialogueDisplayBase newDisplayer = null;
 
-        // 根据具体的eventId精确匹配对应的对话管理器
+        // 根据事件ID创建对应的对话管理器
         switch (eventId)
         {
             case "EventTemplate":
@@ -122,14 +122,24 @@ public class DialogueController : MonoBehaviour
                     this, dialogueText, speakerNameText, characterImage, dialogueContainer);
                 break;
 
-            // 其他所有事件ID默认使用线性对话管理器
-            default:
-                newDisplayer = new TemplateDialogueManager(
+
+            case "FirstScene":
+                newDisplayer = new FirstSceneDialogueManager(
                     this, dialogueText, speakerNameText, characterImage, dialogueContainer);
+                break;
+
+
+            // 添加其他对话管理器的case
+            // case "EventA":
+            //     newDisplayer = new EventADialogueManager(...);
+            //     break;
+
+            default:
+                Debug.LogError($"未找到对应的对话管理器: {eventId}");
                 break;
         }
 
-        // 设置对话显示参数 - 解决useTypingEffect未使用的警告
+        // 设置对话显示参数
         if (newDisplayer != null)
         {
             ConfigureDisplayer(newDisplayer);
@@ -153,6 +163,32 @@ public class DialogueController : MonoBehaviour
 
         // 设置对话完成回调
         displayer.SetDialogueCompleteCallback(OnDialogueComplete);
+
+        // 设置角色图像回调 - 现在可以直接对所有类型的对话显示器使用
+        displayer.onCharacterSpriteChanged = OnCharacterSpriteChanged;
+    }
+
+    /// <summary>
+    /// 处理角色图像变更事件
+    /// </summary>
+    /// <param name="sprite">加载的角色精灵，可能为null</param>
+    private void OnCharacterSpriteChanged(Sprite sprite)
+    {
+        if (characterImage == null)
+            return;
+
+        if (sprite == null)
+        {
+            // 如果sprite为null，直接停用图像组件
+            characterImage.gameObject.SetActive(false);
+        }
+        else
+        {
+            // 如果sprite有效，启用图像组件
+            characterImage.gameObject.SetActive(true);
+
+            // sprite已在DialogueDisplayBase中设置
+        }
     }
 
     /// <summary>
@@ -162,11 +198,30 @@ public class DialogueController : MonoBehaviour
     {
         isDialogueActive = false;
         dialogueContainer.SetActive(false);
-        Debug.Log("对话已完成");
+
+        // 获取当前活跃对话器的事件ID
+        string eventId = activeDisplayer?.EventId;
+
+        // 从缓存中移除对话显示器
+        if (!string.IsNullOrEmpty(eventId) && displayerCache.ContainsKey(eventId))
+        {
+            displayerCache.Remove(eventId);
+        }
+
+        // 释放DialogueParser中加载的JSON数据
+        if (!string.IsNullOrEmpty(eventId))
+        {
+            DialogueParser.Instance.UnloadDialogueEvent(eventId);
+        }
+
+        // 清除当前活跃的对话显示器
+        activeDisplayer = null;
+
+        Debug.Log($"对话已完成，已释放资源: {eventId}");
     }
 
     /// <summary>
-    /// 推进对话（连接到UI按钮）
+    /// 推进对话
     /// </summary>
     public void AdvanceDialogue()
     {

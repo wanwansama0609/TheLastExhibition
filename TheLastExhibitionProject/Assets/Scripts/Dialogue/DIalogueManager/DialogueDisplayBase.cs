@@ -22,14 +22,8 @@ public abstract class DialogueDisplayBase
     protected float typingSpeed = 0.05f;
     protected bool useTypingEffect = true;
 
-    // 当前事件ID
-    protected string currentEventId;
-
-    // 当前句子ID
-    protected string currentSentenceId;
-
     // 当前对话数据缓存
-    protected Dictionary<string, Dictionary<string, string>> currentDialogueData;
+    protected Dictionary<string, Dictionary<string, string>> dialogueData;
 
     // 显示状态
     protected bool isDisplayingText = false;
@@ -38,6 +32,15 @@ public abstract class DialogueDisplayBase
     // 对话回调
     protected System.Action onDialogueComplete;
     protected System.Action<string> onSentenceDisplayed;
+
+    // 角色图像回调事件
+    public System.Action<Sprite> onCharacterSpriteChanged;
+
+    // 当前对话状态
+    protected int dialogueState = 0;
+
+    // 固定的事件ID，每个子类关联一个特定事件
+    public abstract string EventId { get; }
 
     /// <summary>
     /// 构造函数
@@ -60,6 +63,7 @@ public abstract class DialogueDisplayBase
         this.characterImage = characterImage;
         this.dialogueContainer = dialogueContainer;
     }
+
     /// <summary>
     /// 设置打字速度
     /// </summary>
@@ -79,46 +83,57 @@ public abstract class DialogueDisplayBase
     }
 
     /// <summary>
-    /// 初始化对话显示器，加载指定事件ID的对话数据
+    /// 初始化对话显示器，加载事件ID的对话数据
     /// </summary>
-    /// <param name="eventId">要显示的对话事件ID</param>
-    public virtual async Task Initialize(string eventId)
+    public virtual async Task Initialize()
     {
-        currentEventId = eventId;
-
         // 确保对话事件已加载
-        if (!DialogueParser.Instance.IsEventLoaded(eventId))
+        if (!DialogueParser.Instance.IsEventLoaded(EventId))
         {
-            Debug.Log($"正在加载对话事件: {eventId}");
-            bool success = await DialogueParser.Instance.LoadDialogueEventAsync(eventId);
+            Debug.Log($"正在加载对话事件: {EventId}");
+            bool success = await DialogueParser.Instance.LoadDialogueEventAsync(EventId);
             if (!success)
             {
-                Debug.LogError($"加载对话事件失败: {eventId}");
+                Debug.LogError($"加载对话事件失败: {EventId}");
                 return;
             }
         }
 
         // 获取对话数据
-        currentDialogueData = DialogueParser.Instance.GetDialoguesByEventId(eventId);
+        dialogueData = DialogueParser.Instance.GetDialoguesByEventId(EventId);
 
-        if (currentDialogueData == null || currentDialogueData.Count == 0)
+        if (dialogueData == null || dialogueData.Count == 0)
         {
-            Debug.LogError($"对话事件数据为空: {eventId}");
+            Debug.LogError($"对话事件数据为空: {EventId}");
             return;
         }
 
-        Debug.Log($"已成功初始化对话事件: {eventId}，共 {currentDialogueData.Count} 条句子");
+        // 重置对话状态
+        dialogueState = 0;
+
+        Debug.Log($"已成功初始化对话事件: {EventId}，共 {dialogueData.Count} 条句子");
     }
 
     /// <summary>
-    /// 开始显示对话
-    /// 子类必须实现此方法来定义对话的开始流程
+    /// 开始对话
     /// </summary>
-    public abstract void StartDialogue();
+    public virtual void StartDialogue()
+    {
+        // 显示对话UI
+        if (dialogueContainer != null)
+        {
+            dialogueContainer.SetActive(true);
+        }
+
+        // 重置对话状态并展示第一个对话
+        dialogueState = 0;
+        AdvanceDialogue();
+
+        Debug.Log($"开始显示对话事件: {EventId}");
+    }
 
     /// <summary>
-    /// 推进对话到下一步
-    /// 子类必须实现此方法来定义对话的流程控制
+    /// 推进对话到下一步 - 抽象方法，子类必须实现
     /// </summary>
     public abstract void AdvanceDialogue();
 
@@ -129,17 +144,16 @@ public abstract class DialogueDisplayBase
     protected virtual IEnumerator DisplaySentence(string sentenceId)
     {
         isDisplayingText = true;
-        currentSentenceId = sentenceId;
 
-        if (!currentDialogueData.ContainsKey(sentenceId))
+        if (!dialogueData.ContainsKey(sentenceId))
         {
-            Debug.LogError($"在事件 {currentEventId} 中未找到句子: {sentenceId}");
+            Debug.LogError($"在事件 {EventId} 中未找到句子: {sentenceId}");
             isDisplayingText = false;
             yield break;
         }
 
         // 获取句子数据
-        Dictionary<string, string> attributes = currentDialogueData[sentenceId];
+        Dictionary<string, string> attributes = dialogueData[sentenceId];
 
         // 显示说话者名称
         if (speakerNameText != null && attributes.ContainsKey("speaker"))
@@ -171,15 +185,26 @@ public abstract class DialogueDisplayBase
         }
 
         // 显示角色图像
-        if (characterImage != null && attributes.ContainsKey("sprite") && !string.IsNullOrEmpty(attributes["sprite"]))
+        if (characterImage != null)
         {
-            Sprite sprite = Resources.Load<Sprite>(attributes["sprite"]);
-            if (sprite != null)
+            Sprite characterSprite = null;
+
+            // 检查是否有sprite属性并尝试加载
+            if (attributes.ContainsKey("sprite") && !string.IsNullOrEmpty(attributes["sprite"]))
             {
-                characterImage.sprite = sprite;
+                characterSprite = Resources.Load<Sprite>(attributes["sprite"]);
+            }
+
+            // 触发角色图像变更回调
+            onCharacterSpriteChanged?.Invoke(characterSprite);
+
+            // 如果加载成功显示图像
+            if (characterSprite != null)
+            {
+                characterImage.sprite = characterSprite;
                 characterImage.gameObject.SetActive(true);
             }
-            else
+            else if (attributes.ContainsKey("sprite") && !string.IsNullOrEmpty(attributes["sprite"]))
             {
                 Debug.LogWarning($"无法加载角色图像: {attributes["sprite"]}");
             }
@@ -220,9 +245,9 @@ public abstract class DialogueDisplayBase
     /// <summary>
     /// 立即显示完整句子文本（跳过打字效果）
     /// </summary>
-    protected virtual void CompleteCurrentSentence()
+    protected virtual void CompleteCurrentSentence(string sentenceId)
     {
-        if (isDisplayingText && dialogueText != null && currentSentenceId != null)
+        if (isDisplayingText && dialogueText != null)
         {
             // 停止打字效果协程
             if (typingCoroutine != null)
@@ -232,7 +257,7 @@ public abstract class DialogueDisplayBase
             }
 
             // 直接显示完整文本
-            string fullText = DialogueParser.Instance.GetSentenceAttribute(currentEventId, currentSentenceId, "text");
+            string fullText = DialogueParser.Instance.GetSentenceAttribute(EventId, sentenceId, "text");
             if (!string.IsNullOrEmpty(fullText))
             {
                 dialogueText.text = fullText;
@@ -241,7 +266,7 @@ public abstract class DialogueDisplayBase
             isDisplayingText = false;
 
             // 触发句子显示完成回调
-            onSentenceDisplayed?.Invoke(currentSentenceId);
+            onSentenceDisplayed?.Invoke(sentenceId);
         }
     }
 
@@ -259,7 +284,7 @@ public abstract class DialogueDisplayBase
         // 触发对话完成回调
         onDialogueComplete?.Invoke();
 
-        Debug.Log($"对话事件 {currentEventId} 已结束");
+        Debug.Log($"对话事件 {EventId} 已结束");
     }
 
     /// <summary>
@@ -288,7 +313,7 @@ public abstract class DialogueDisplayBase
     /// <returns>属性值，如果不存在则返回null</returns>
     protected string GetAttribute(string sentenceId, string attributeName)
     {
-        return DialogueParser.Instance.GetSentenceAttribute(currentEventId, sentenceId, attributeName);
+        return DialogueParser.Instance.GetSentenceAttribute(EventId, sentenceId, attributeName);
     }
 
     /// <summary>

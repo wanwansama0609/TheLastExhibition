@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.IO;
 
 /// <summary>
-/// 纯数据管理的对话管理器，专注于异步加载和数据存取
+/// 纯数据管理的对话管理器，专注于异步加载和数据存取，支持多语言
 /// </summary>
 public class DialogueParser : MonoBehaviour
 {
@@ -45,6 +45,19 @@ public class DialogueParser : MonoBehaviour
     }
 
     /// <summary>
+    /// 获取当前语言设置
+    /// </summary>
+    /// <returns>当前语言代码</returns>
+    private string GetCurrentLanguage()
+    {
+        if (LanguageSetting.Instance != null)
+        {
+            return LanguageSetting.Instance.GetLanguage();
+        }
+        return "zh"; // 如果LanguageSetting不存在，返回默认语言
+    }
+
+    /// <summary>
     /// 异步加载对话事件
     /// </summary>
     /// <param name="eventId">要加载的事件ID</param>
@@ -73,11 +86,11 @@ public class DialogueParser : MonoBehaviour
         if (success)
         {
             loadedEventIds.Add(eventId);
-            Debug.Log($"成功加载对话事件: {eventId}");
+            Debug.Log($"成功加载对话事件: {eventId}，语言: {GetCurrentLanguage()}");
         }
         else
         {
-            Debug.LogError($"无法加载对话事件: {eventId}");
+            Debug.LogError($"无法加载对话事件: {eventId}，语言: {GetCurrentLanguage()}");
         }
 
         isLoading = false;
@@ -93,18 +106,40 @@ public class DialogueParser : MonoBehaviour
     {
         try
         {
-            // 构建JSON文件的完整路径
-            string jsonFilePath = Path.Combine(dialogueJsonFolderPath, $"{eventId}.json");
+            // 获取当前语言
+            string currentLanguage = GetCurrentLanguage();
+
+            // 构建JSON文件的完整路径，包含语言文件夹
+            string jsonFilePath = Path.Combine(dialogueJsonFolderPath, currentLanguage, $"{eventId}.json");
 
             // 检查文件是否存在
             if (!File.Exists(jsonFilePath))
             {
-                // 尝试从Resources加载
-                TextAsset textAsset = Resources.Load<TextAsset>($"Dialogues/{eventId}");
+                // 尝试从Resources加载，包含语言子路径
+                string resourcePath = $"Dialogues/{currentLanguage}/{eventId}";
+                TextAsset textAsset = Resources.Load<TextAsset>(resourcePath);
+
                 if (textAsset == null)
                 {
-                    Debug.LogError($"对话JSON文件不存在: {jsonFilePath}，且Resources中也没有找到");
-                    return false;
+                    Debug.LogWarning($"当前语言[{currentLanguage}]的对话文件不存在: {resourcePath}");
+
+                    // 如果当前不是默认语言，尝试加载默认语言的文件
+                    if (currentLanguage != "zh")
+                    {
+                        Debug.Log($"尝试加载默认语言(zh)的对话文件");
+                        string defaultResourcePath = $"Dialogues/zh/{eventId}";
+                        textAsset = Resources.Load<TextAsset>(defaultResourcePath);
+
+                        if (textAsset == null)
+                        {
+                            Debug.LogError($"默认语言(zh)的对话文件也不存在: {defaultResourcePath}");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
 
                 await ParseDialogueJson(eventId, textAsset.text);
@@ -305,6 +340,43 @@ public class DialogueParser : MonoBehaviour
         {
             await LoadDialogueEventAsync(eventId);
         }
+    }
+
+    /// <summary>
+    /// 卸载指定事件ID的对话数据
+    /// </summary>
+    /// <param name="eventId">要卸载的对话事件ID</param>
+    public void UnloadDialogueEvent(string eventId)
+    {
+        if (string.IsNullOrEmpty(eventId))
+        {
+            Debug.LogWarning("尝试卸载空的事件ID");
+            return;
+        }
+
+        // 检查是否在加载中
+        if (IsEventLoading(eventId))
+        {
+            Debug.LogWarning($"事件 {eventId} 正在加载中，无法卸载");
+            return;
+        }
+
+        // 从已加载事件集合中移除
+        loadedEventIds.Remove(eventId);
+
+        // 从对话数据库中移除
+        if (dialogueDatabase.ContainsKey(eventId))
+        {
+            dialogueDatabase.Remove(eventId);
+            Debug.Log($"已卸载对话事件数据: {eventId}");
+        }
+        else
+        {
+            Debug.LogWarning($"未找到要卸载的对话事件: {eventId}");
+        }
+
+        // 卸载相关资源
+        Resources.UnloadUnusedAssets();
     }
 }
 
