@@ -3,104 +3,104 @@
     {
       "id": "sentence_001",
       "speaker": "Dorian Christon",
-      "text": "It’s almost eleven o’clock… Why hasn’t Miss Annabelle arrived yet?",
-      "sprite": "",
+      "text": "It's almost eleven o'clock… Why hasn't Miss Annabelle arrived yet?",
+      "sprite": ""
     },
     {
       "id": "sentence_002",
       "speaker": "Dorian Christon",
       "text": "The carriage will be here soon...",
-      "sprite": "",
+      "sprite": ""
     },
     {
       "id": "sentence_003",
       "speaker": "Annabel Vesey",
       "text": "Mr. Detective!!!",
-      "sprite": "character_smile",
-    }
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_004",
       "speaker": "Annabel Vesey",
       "text": "Sorry I'm late!",
-      "sprite": "character_smile",
-    }
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_005",
       "speaker": "Annabel Vesey",
-      "text": "We’re not going to miss the carriage, are we?",
-      "sprite": "character_smile",
-    }
+      "text": "We're not going to miss the carriage, are we?",
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_006",
       "speaker": "Dorian Christon",
-      "text": "It’s fine for now... but if you’d been five minutes later, that’d be a different story.",
-      "sprite": "character_smile",
-    }
+      "text": "It's fine for now... but if you'd been five minutes later, that'd be a different story.",
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_007",
       "speaker": "Annabel Vesey",
-      "text": "You haven’t been waiting long, have you, sir...? I’m really sorry.",
-      "sprite": "character_smile",
-    }
+      "text": "You haven't been waiting long, have you, sir...? I'm really sorry.",
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_008",
       "speaker": "Dorian Christon",
-      "text": "I only just got here myself. This trip isn’t for a case investigation, so there’s no need to be so tense.",
-      "sprite": "character_smile",
-    }
+      "text": "I only just got here myself. This trip isn't for a case investigation, so there's no need to be so tense.",
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_009",
       "speaker": "Annabel Vesey",
-      "text": "But I’ve been looking forward to this since last week! It’s Sir Bright’s museum-hotel—It is said to be most luxurious! I heard it’s built on a mountain, with breathtaking views, and you can even see the ocean from there!",
-      "sprite": "character_smile",
-    }
+      "text": "But I've been looking forward to this since last week! It's Sir Bright's museum-hotel—It is said to be most luxurious! I heard it's built on a mountain, with breathtaking views, and you can even see the ocean from there!",
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_010",
       "speaker": "Dorian Christon",
-      "text": "It’s not just the scenery… The artifacts on display there were collected by Sir Bright over five whole years. Especially—the long-lost “Ten Great Relics.” We can’t afford to waste this opportunity.",
-      "sprite": "character_smile",
-    }
+      "text": "It's not just the scenery… The artifacts on display there were collected by Sir Bright over five whole years. Especially—the long-lost “Ten Great Relics.” We can't afford to waste this opportunity.",
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_011",
       "speaker": "Annabel Vesey",
-      "text": "I am most grateful to you, Mr. Detective! It’s all thanks to you helping Duke Howard with that case last time that he invited us to come along. I heard staying even one night at that hotel doesn’t come cheap!",
-      "sprite": "character_smile",
-    }
+      "text": "I am most grateful to you, Mr. Detective! It's all thanks to you helping Duke Howard with that case last time that he invited us to come along. I heard staying even one night at that hotel doesn't come cheap!",
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_012",
       "speaker": "Dorian Christon",
-      "text": "You helped quite a bit with that last case too. Without you, it would’ve been tricky indeed… I confess, I am quite ignorant in the field of medicine.",
-      "sprite": "character_smile",
-    }
+      "text": "You helped quite a bit with that last case too. Without you, it would've been tricky indeed… I confess, I am quite ignorant in the field of medicine.",
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_013",
       "speaker": "coachman",
       "text": "Excuse me, are you Mr. Cliston and Miss Vesey?",
-      "sprite": "character_smile",
-    }
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_014",
       "speaker": "Dorian Christon",
-      "text": "Yes, that’s us.",
-      "sprite": "character_smile",
-    }
+      "text": "Yes, that's us.",
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_015",
       "speaker": "coachman",
       "text": "Sir Bright has arranged for me to pick you up. Please present your invitation so I can verify your identities.",
-      "sprite": "character_smile",
-    }
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_016",
       "speaker": "Dorian Christon",
       "text": "Of course, please allow me a moment to find it.",
-      "sprite": "character_smile",
-    }
+      "sprite": "character_smile"
+    },
     {
       "id": "sentence_018",
       "speaker": "coachman",
       "text": "Thank you, Mr. Cliston, Miss Vesey. Everything is in order. Sir Bright has made all the necessary arrangements for your journey. Please allow me to escort you to the carriage.",
-      "sprite": "character_smile",
+      "sprite": "character_smile"
     }
   ]
 }
