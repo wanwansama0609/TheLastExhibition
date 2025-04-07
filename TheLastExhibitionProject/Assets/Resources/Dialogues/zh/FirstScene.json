@@ -99,12 +99,6 @@
     {
       "id": "sentence_017",
       "speaker": "马车夫",
-      "text": "布莱特爵士已安排我来接二位，请出示邀请函，以便确认身份。",
-      "sprite": "character_smile"
-    },
-    {
-      "id": "sentence_018",
-      "speaker": "马车夫",
       "text": "感谢您，克里斯顿先生、维斯利小姐。一切无误。布莱特爵士已为你们的行程妥善安排。请允许我引领你们登上马车。",
       "sprite": "character_smile"
     }

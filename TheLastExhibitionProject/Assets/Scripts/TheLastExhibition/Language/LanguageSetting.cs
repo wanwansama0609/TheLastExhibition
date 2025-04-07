@@ -1,5 +1,4 @@
 using UnityEngine;
-
 /// <summary>
 /// 简化的游戏设置管理类，包含语言设置
 /// </summary>
@@ -7,10 +6,8 @@ public class LanguageSetting : MonoBehaviour
 {
     // 单例实例
     public static LanguageSetting Instance { get; private set; }
-
     // 默认语言设置
     [SerializeField] private string currentLanguage = "zh";
-
     private void Awake()
     {
         // 单例设置
@@ -24,7 +21,6 @@ public class LanguageSetting : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
     /// <summary>
     /// 获取当前语言设置
     /// </summary>
@@ -33,7 +29,6 @@ public class LanguageSetting : MonoBehaviour
     {
         return currentLanguage;
     }
-
     /// <summary>
     /// 设置当前语言
     /// </summary>
@@ -45,15 +40,12 @@ public class LanguageSetting : MonoBehaviour
             Debug.LogWarning("语言代码不能为空，将使用默认值");
             return;
         }
-
         // 记录之前的语言，检查是否变化
         string previousLanguage = currentLanguage;
         currentLanguage = languageCode;
-
         if (previousLanguage != currentLanguage)
         {
             Debug.Log($"当前语言设置为: {currentLanguage}");
-
             // 语言变更时清除DialogueParser的缓存
             if (DialogueParser.Instance != null)
             {

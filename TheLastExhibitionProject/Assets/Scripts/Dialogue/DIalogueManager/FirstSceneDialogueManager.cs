@@ -143,12 +143,6 @@ public class FirstSceneDialogueManager : DialogueDisplayBase
                 dialogueState++;
                 break;
 
-            case 17:
-                currentSentenceId = "sentence_018";
-                typingCoroutine = StartCoroutine(DisplaySentence(currentSentenceId));
-                dialogueState++;
-                break;
-
             default:
                 Debug.LogWarning("未处理的对话状态: " + dialogueState);
                 EndDialogue();
