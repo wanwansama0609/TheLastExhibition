@@ -1,4 +1,4 @@
-/*using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Threading.Tasks;
@@ -28,6 +28,9 @@ public class TextLocalizationManager : MonoBehaviour
     // 预加载状态
     [SerializeField]
     private bool preloadOnAwake = true;
+
+    // 当前加载的语言
+    private string loadedLanguage = "";
 
     private void Awake()
     {
@@ -75,11 +78,17 @@ public class TextLocalizationManager : MonoBehaviour
             return false;
         }
 
-        isLoading = true;
-        textDatabase.Clear();
-
         // 获取当前语言
         string currentLanguage = GetCurrentLanguage();
+
+        // 如果已经加载了当前语言的数据，则无需重新加载
+        if (currentLanguage == loadedLanguage && textDatabase.Count > 0)
+        {
+            return true;
+        }
+
+        isLoading = true;
+        textDatabase.Clear();
 
         // 构建JSON文件的完整路径，包含语言文件夹
         string jsonFilePath = Path.Combine(textJsonFolderPath, currentLanguage, "UIText.json");
@@ -127,6 +136,7 @@ public class TextLocalizationManager : MonoBehaviour
                         {
                             jsonText = textAsset.text;
                             success = true;
+                            currentLanguage = "zh"; // 使用默认语言
                         }
                     }
                 }
@@ -136,6 +146,10 @@ public class TextLocalizationManager : MonoBehaviour
             if (success && !string.IsNullOrEmpty(jsonText))
             {
                 success = await ParseTextJsonAsync(jsonText);
+                if (success)
+                {
+                    loadedLanguage = currentLanguage;
+                }
             }
         }
         catch (System.Exception e)
@@ -151,6 +165,9 @@ public class TextLocalizationManager : MonoBehaviour
         if (success)
         {
             Debug.Log($"成功加载UI文本数据，语言: {currentLanguage}，总条目: {textDatabase.Count}");
+
+            // 通知所有LocalizedText组件更新
+            NotifyTextComponentsToUpdate();
         }
         else
         {
@@ -211,8 +228,9 @@ public class TextLocalizationManager : MonoBehaviour
     /// <returns>本地化后的文本，如果未找到则返回key本身</returns>
     public string GetText(string key)
     {
-        // 如果文本数据库为空或正在加载，则尝试同步加载
-        if ((textDatabase.Count == 0 || isLoading) && !preloadOnAwake)
+        // 如果文本数据库为空或不是当前语言，则尝试同步加载
+        string currentLanguage = GetCurrentLanguage();
+        if ((textDatabase.Count == 0 || loadedLanguage != currentLanguage) && !isLoading)
         {
             LoadTextDataAsync().Wait();
         }
@@ -236,24 +254,46 @@ public class TextLocalizationManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 更改语言并重新加载文本数据
+    /// 通知所有本地化文本组件更新
     /// </summary>
-    /// <param name="languageCode">新的语言代码</param>
-    /// <returns>是否成功</returns>
-    public async Task<bool> ChangeLanguageAsync(string languageCode)
+    private void NotifyTextComponentsToUpdate()
     {
-        // 更新语言设置
-        if (LanguageSetting.Instance != null)
+        // 查找所有LocalizedText组件并调用Localize方法
+        LocalizedText[] allLocalizedTexts = FindObjectsByType<LocalizedText>(FindObjectsSortMode.None);
+        foreach (var localizedText in allLocalizedTexts)
         {
-            LanguageSetting.Instance.SetLanguage(languageCode);
+            if (localizedText != null && localizedText.gameObject.activeInHierarchy)
+            {
+                localizedText.Localize();
+            }
         }
-        else
-        {
-            Debug.LogWarning("LanguageSetting实例不存在，无法设置语言");
-        }
+    }
 
-        // 重新加载文本数据
-        return await LoadTextDataAsync();
+    /// <summary>
+    /// 当语言设置变化时调用，重新加载文本数据
+    /// </summary>
+    public void OnLanguageChanged()
+    {
+        // 尝试异步加载新语言的文本数据
+        _ = LoadTextDataAsync();
+    }
+
+    /// <summary>
+    /// 检查语言是否变更，如果变更则重新加载文本
+    /// </summary>
+    public void CheckLanguageChange()
+    {
+        string currentLanguage = GetCurrentLanguage();
+        if (currentLanguage != loadedLanguage)
+        {
+            OnLanguageChanged();
+        }
+    }
+
+    private void Update()
+    {
+        // 每帧检查语言是否变更（可以改为其他检查方式，如定时器）
+        CheckLanguageChange();
     }
 
     /// <summary>
@@ -262,6 +302,7 @@ public class TextLocalizationManager : MonoBehaviour
     public void ClearTextData()
     {
         textDatabase.Clear();
+        loadedLanguage = "";
         Debug.Log("已清除所有UI文本数据");
     }
 }
@@ -283,4 +324,4 @@ public class TextEntry
 {
     public string key;
     public string value;
-}*/
+}

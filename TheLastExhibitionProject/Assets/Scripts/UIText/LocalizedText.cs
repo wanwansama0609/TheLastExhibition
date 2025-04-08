@@ -1,4 +1,4 @@
-/*Susing System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -14,9 +14,6 @@ public class LocalizedText : MonoBehaviour
 
     [Tooltip("是否在激活时自动本地化")]
     [SerializeField] private bool localizeOnEnable = true;
-
-    [Tooltip("是否监听语言更改事件")]
-    [SerializeField] private bool listenToLanguageChanges = true;
 
     // 缓存的文本组件
     private TextMeshProUGUI tmpText;
@@ -42,29 +39,6 @@ public class LocalizedText : MonoBehaviour
         {
             Localize();
         }
-
-        // 注册语言更改事件
-        if (listenToLanguageChanges && LanguageSetting.Instance != null)
-        {
-            LanguageSetting.Instance.OnLanguageChanged += OnLanguageChanged;
-        }
-    }
-
-    private void OnDisable()
-    {
-        // 取消注册语言更改事件
-        if (listenToLanguageChanges && LanguageSetting.Instance != null)
-        {
-            LanguageSetting.Instance.OnLanguageChanged -= OnLanguageChanged;
-        }
-    }
-
-    /// <summary>
-    /// 当语言更改时调用
-    /// </summary>
-    private void OnLanguageChanged(string newLanguage)
-    {
-        Localize();
     }
 
     /// <summary>
@@ -78,8 +52,15 @@ public class LocalizedText : MonoBehaviour
             return;
         }
 
+        // 检查TextLocalizationManager是否初始化
+        if (TextLocalizationManager.Instance == null)
+        {
+            Debug.LogWarning("TextLocalizationManager实例不存在，无法获取本地化文本");
+            return;
+        }
+
         // 获取本地化文本
-        string localizedText = TextLocalizationManager.Instance?.GetText(textKey) ?? textKey;
+        string localizedText = TextLocalizationManager.Instance.GetText(textKey);
 
         // 更新文本组件
         if (tmpText != null)
@@ -113,4 +94,4 @@ public class LocalizedText : MonoBehaviour
     {
         return textKey;
     }
-}*/
+}

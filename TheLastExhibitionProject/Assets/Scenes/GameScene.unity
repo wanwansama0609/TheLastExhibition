@@ -1090,6 +1090,7 @@ GameObject:
   - component: {fileID: 1579020275}
   - component: {fileID: 1579020274}
   - component: {fileID: 1579020278}
+  - component: {fileID: 1579020279}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1200,6 +1201,24 @@ MonoBehaviour:
   typingSpeed: 0.05
   useTypingEffect: 1
   inputCooldown: 0.2
+--- !u!114 &1579020279
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1579020273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0020548e1801b8146974733e2c27bd5e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startGameButton: {fileID: 0}
+  loadGameButton: {fileID: 0}
+  settingsButton: {fileID: 0}
+  exitGameButton: {fileID: 0}
+  settingsPanel: {fileID: 0}
+  buttonClickSound: {fileID: 0}
 --- !u!1 &1638993760
 GameObject:
   m_ObjectHideFlags: 0
@@ -1348,6 +1367,7 @@ GameObject:
   - component: {fileID: 1680093041}
   - component: {fileID: 1680093044}
   - component: {fileID: 1680093043}
+  - component: {fileID: 1680093045}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1409,7 +1429,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a3ec8a5f5be6bd54080a9fd17f7426b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentLanguage: en
+  currentLanguage: zh
+--- !u!114 &1680093045
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1680093040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11ca32dfb51f9f5498b5f35efeb10291, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textJsonFolderPath: Assets/Resources/Text/
+  preloadOnAwake: 1
 --- !u!1 &1794624491
 GameObject:
   m_ObjectHideFlags: 0

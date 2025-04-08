@@ -1,9 +1,8 @@
-/*using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Threading.Tasks;
 
 /// <summary>
 /// 游戏设置面板控制器
@@ -43,7 +42,6 @@ public class SettingsPanel : MonoBehaviour
         // 如果没有在Inspector中设置引用，尝试获取MainMenuUI
         if (mainMenuUI == null)
         {
-            // 使用新的非弃用方法
             mainMenuUI = Object.FindAnyObjectByType<MainMenuUI>();
 
             if (mainMenuUI == null)
@@ -190,27 +188,21 @@ public class SettingsPanel : MonoBehaviour
         // 清除现有选项
         languageDropdown.ClearOptions();
 
-        // 获取支持的语言列表
-        List<string> supportedLanguages = LanguageSetting.Instance.GetSupportedLanguages();
+        // 添加支持的语言选项
         List<TMP_Dropdown.OptionData> options = new List<TMP_Dropdown.OptionData>();
 
-        // 创建每种语言的选项
-        foreach (string lang in supportedLanguages)
-        {
-            string displayName = LanguageSetting.Instance.GetLanguageDisplayName(lang);
-            options.Add(new TMP_Dropdown.OptionData(displayName));
-        }
+        // 添加中文选项
+        options.Add(new TMP_Dropdown.OptionData("简体中文"));
+
+        // 添加英文选项
+        options.Add(new TMP_Dropdown.OptionData("English"));
 
         // 添加选项到下拉列表
         languageDropdown.AddOptions(options);
 
         // 设置当前选中的语言
         string currentLang = LanguageSetting.Instance.GetLanguage();
-        int currentIndex = supportedLanguages.IndexOf(currentLang);
-        if (currentIndex >= 0)
-        {
-            languageDropdown.value = currentIndex;
-        }
+        languageDropdown.value = currentLang == "en" ? 1 : 0;
     }
 
     private void OnCloseButtonClicked()
@@ -259,26 +251,19 @@ public class SettingsPanel : MonoBehaviour
         Debug.Log($"全屏模式设置为: {isFullscreen}");
     }
 
-    private async void OnLanguageChanged(int languageIndex)
+    private void OnLanguageChanged(int languageIndex)
     {
         if (LanguageSetting.Instance == null)
             return;
 
-        // 获取选中的语言代码
-        List<string> supportedLanguages = LanguageSetting.Instance.GetSupportedLanguages();
-        if (languageIndex < 0 || languageIndex >= supportedLanguages.Count)
-            return;
+        // 根据下拉菜单索引设置语言
+        string newLanguage = languageIndex == 1 ? "en" : "zh";
 
-        string newLanguage = supportedLanguages[languageIndex];
+        // 设置新语言
+        LanguageSetting.Instance.SetLanguage(newLanguage);
 
-        // 更新语言设置并重新加载文本
-        if (TextLocalizationManager.Instance != null)
-        {
-            await TextLocalizationManager.Instance.ChangeLanguageAsync(newLanguage);
-
-            // 文本已通过事件自动更新，不需要手动刷新
-            Debug.Log($"语言设置更改为: {newLanguage}");
-        }
+        // TextLocalizationManager会自动检测语言变更并更新文本
+        Debug.Log($"语言设置更改为: {newLanguage}");
     }
 
     private void SaveAllSettings()
@@ -293,4 +278,4 @@ public class SettingsPanel : MonoBehaviour
         // 确保设置在面板关闭时保存
         SaveAllSettings();
     }
-}*/
+}

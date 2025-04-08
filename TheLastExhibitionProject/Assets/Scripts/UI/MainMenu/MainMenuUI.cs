@@ -1,4 +1,4 @@
-/*using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -94,27 +94,23 @@ public class MainMenuUI : MonoBehaviour
     private void SetupButtonText(Button button, string textKey)
     {
         // 检查按钮是否已有LocalizedText组件
-        LocalizedText localizedText = button.GetComponentInChildren<LocalizedText>();
-
-        if (localizedText == null)
+        TextMeshProUGUI tmpText = button.GetComponentInChildren<TextMeshProUGUI>();
+        if (tmpText != null)
         {
-            // 获取按钮的文本组件
-            TextMeshProUGUI tmpText = button.GetComponentInChildren<TextMeshProUGUI>();
-            if (tmpText != null)
+            // 检查是否已有LocalizedText组件
+            LocalizedText localizedText = tmpText.GetComponent<LocalizedText>();
+            if (localizedText == null)
             {
                 // 添加LocalizedText组件
                 localizedText = tmpText.gameObject.AddComponent<LocalizedText>();
-                localizedText.SetTextKey(textKey);
             }
-            else
-            {
-                Debug.LogWarning($"按钮 {button.name} 没有TextMeshProUGUI子组件，无法设置本地化文本");
-            }
+
+            // 设置文本键
+            localizedText.SetTextKey(textKey);
         }
         else
         {
-            // 已有LocalizedText组件，直接设置键
-            localizedText.SetTextKey(textKey);
+            Debug.LogWarning($"按钮 {button.name} 没有TextMeshProUGUI子组件，无法设置本地化文本");
         }
     }
 
@@ -177,4 +173,4 @@ public class MainMenuUI : MonoBehaviour
             settingsPanel.SetActive(false);
         }
     }
-}*/
+}
