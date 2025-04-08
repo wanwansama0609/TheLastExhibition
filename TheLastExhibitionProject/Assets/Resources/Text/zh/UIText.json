@@ -1,0 +1,36 @@
+{
+  "entries": [
+    {
+      "key": "btn_start_game",
+      "value": "开始游戏"
+    },
+    {
+      "key": "btn_load_game",
+      "value": "选择存档"
+    },
+    {
+      "key": "btn_settings",
+      "value": "设置"
+    },
+    {
+      "key": "btn_exit_game",
+      "value": "退出游戏"
+    },
+    {
+      "key": "settings_title",
+      "value": "游戏设置"
+    },
+    {
+      "key": "settings_music_volume",
+      "value": "音乐音量"
+    },
+    {
+      "key": "settings_sfx_volume",
+      "value": "音效音量"
+    },
+    {
+      "key": "settings_language",
+      "value": "语言"
+    }
+  ]
+}

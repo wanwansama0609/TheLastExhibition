@@ -6,7 +6,7 @@ using TMPro;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// 游戏主菜单UI控制器
+/// 游戏主菜单UI控制器，集成了AudioManager
 /// </summary>
 public class MainMenuUI : MonoBehaviour
 {
@@ -17,9 +17,10 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Button exitGameButton;
     [SerializeField] private GameObject settingsPanel;
 
-    [Header("音效")]
-    [SerializeField] private AudioClip buttonClickSound;
-    private AudioSource audioSource;
+    [Header("音频")]
+    [SerializeField] private AudioClip buttonClickSound; // 可选，如果AudioManager没有设置音效时使用
+
+    private AudioSource localAudioSource; // 仅在AudioManager不可用时使用的本地音频源
 
     // 按钮文本键
     private const string START_GAME_KEY = "btn_start_game";
@@ -29,11 +30,11 @@ public class MainMenuUI : MonoBehaviour
 
     private void Awake()
     {
-        // 获取或添加音频源
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource == null)
+        // 获取或添加本地音频源（仅作为备用）
+        localAudioSource = GetComponent<AudioSource>();
+        if (localAudioSource == null)
         {
-            audioSource = gameObject.AddComponent<AudioSource>();
+            localAudioSource = gameObject.AddComponent<AudioSource>();
         }
 
         // 确保设置面板初始状态为关闭
@@ -51,7 +52,23 @@ public class MainMenuUI : MonoBehaviour
         // 确保语言设置已加载
         if (TextLocalizationManager.Instance == null)
         {
-            Debug.LogError("TextLocalizationManager实例不存在，无法加载本地化文本");
+            Debug.LogWarning("TextLocalizationManager实例不存在，无法加载本地化文本");
+        }
+
+        // 如果有AudioManager，则向AudioManager注册音效
+        if (AudioManager.Instance != null && buttonClickSound != null)
+        {
+            // 可选：将按钮音效添加到AudioManager中，如果还没有设置的话
+            // 这里假设AudioManager有一个AddSFX方法，实际取决于你的AudioManager实现
+            // AudioManager.Instance.AddSFX("ButtonClick", buttonClickSound);
+        }
+        else
+        {
+            // 使用本地音频源设置音量
+            if (localAudioSource != null)
+            {
+                localAudioSource.volume = PlayerPrefs.GetFloat("SFXVolume", 0.75f);
+            }
         }
     }
 
@@ -159,9 +176,15 @@ public class MainMenuUI : MonoBehaviour
     // 播放按钮点击音效
     private void PlayButtonClickSound()
     {
-        if (audioSource != null && buttonClickSound != null)
+        // 优先使用AudioManager播放音效
+        if (AudioManager.Instance != null)
         {
-            audioSource.PlayOneShot(buttonClickSound);
+            AudioManager.Instance.PlaySFX("ButtonClick");
+        }
+        // 如果没有AudioManager或音效名称不匹配，则尝试使用本地AudioSource
+        else if (localAudioSource != null && buttonClickSound != null)
+        {
+            localAudioSource.PlayOneShot(buttonClickSound, localAudioSource.volume);
         }
     }
 
@@ -171,6 +194,17 @@ public class MainMenuUI : MonoBehaviour
         if (settingsPanel != null)
         {
             settingsPanel.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// 当音效音量改变时更新本地音频源的音量
+    /// </summary>
+    public void UpdateLocalAudioVolume(float volume)
+    {
+        if (localAudioSource != null)
+        {
+            localAudioSource.volume = volume;
         }
     }
 }

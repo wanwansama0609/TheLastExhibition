@@ -52,6 +52,12 @@ public class TheLastExhibition : MonoBehaviour
             DialogueController controller = controllerObj.AddComponent<DialogueController>();
 
         }
+
+        if (AudioManager.Instance != null)
+        {
+            // 通过名称播放音乐
+            AudioManager.Instance.PlayMusic("TestMusic");
+        }
     }
 
 

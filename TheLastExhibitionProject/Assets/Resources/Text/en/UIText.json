@@ -1,0 +1,36 @@
+{
+  "entries": [
+    {
+      "key": "btn_start_game",
+      "value": "Start Game"
+    },
+    {
+      "key": "btn_load_game",
+      "value": "Load Game"
+    },
+    {
+      "key": "btn_settings",
+      "value": "Settings"
+    },
+    {
+      "key": "btn_exit_game",
+      "value": "Exit Game"
+    },
+    {
+      "key": "settings_title",
+      "value": "Game Settings"
+    },
+    {
+      "key": "settings_music_volume",
+      "value": "Music Volume"
+    },
+    {
+      "key": "settings_sfx_volume",
+      "value": "Sound Effects Volume"
+    },
+    {
+      "key": "settings_language",
+      "value": "Language"
+    }
+  ]
+}
