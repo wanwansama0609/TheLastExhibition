@@ -37,6 +37,12 @@ public class DialogueController : MonoBehaviour
     // 对话是否活跃
     private bool isDialogueActive = false;
 
+    // 当前对话事件ID
+    private string currentDialogueEventId;
+
+    // 对话结束事件，返回对话的事件ID
+    public System.Action<string> OnDialogueEnd;
+
     private void Awake()
     {
         // 设置单例
@@ -79,6 +85,9 @@ public class DialogueController : MonoBehaviour
     /// <param name="eventId">对话事件ID</param>
     public async void StartDialogue(string eventId)
     {
+        // 保存当前对话事件ID
+        currentDialogueEventId = eventId;
+
         // 尝试从缓存获取显示器，如果不存在则创建新的
         if (!displayerCache.TryGetValue(eventId, out activeDisplayer))
         {
@@ -128,6 +137,7 @@ public class DialogueController : MonoBehaviour
                     this, dialogueText, speakerNameText, characterImage, dialogueContainer);
                 break;
 
+            
 
             // 添加其他对话管理器的case
             // case "EventA":
@@ -200,7 +210,7 @@ public class DialogueController : MonoBehaviour
         dialogueContainer.SetActive(false);
 
         // 获取当前活跃对话器的事件ID
-        string eventId = activeDisplayer?.EventId;
+        string eventId = currentDialogueEventId;
 
         // 从缓存中移除对话显示器
         if (!string.IsNullOrEmpty(eventId) && displayerCache.ContainsKey(eventId))
@@ -214,8 +224,12 @@ public class DialogueController : MonoBehaviour
             DialogueParser.Instance.UnloadDialogueEvent(eventId);
         }
 
+        // 触发对话结束事件
+        OnDialogueEnd?.Invoke(eventId);
+
         // 清除当前活跃的对话显示器
         activeDisplayer = null;
+        currentDialogueEventId = null;
 
         Debug.Log($"对话已完成，已释放资源: {eventId}");
     }
@@ -239,7 +253,16 @@ public class DialogueController : MonoBehaviour
         // 隐藏对话UI
         dialogueContainer.SetActive(false);
         isDialogueActive = false;
+
+        // 触发对话结束事件
+        if (!string.IsNullOrEmpty(currentDialogueEventId))
+        {
+            OnDialogueEnd?.Invoke(currentDialogueEventId);
+        }
+
+        // 清理
         activeDisplayer = null;
+        currentDialogueEventId = null;
     }
 
     /// <summary>

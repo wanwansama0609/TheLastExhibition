@@ -13,6 +13,7 @@ public class FirstSceneDialogueManager : DialogueDisplayBase
     // 固定的事件ID
     public override string EventId => "FirstScene";
 
+
     /// <summary>
     /// 构造函数
     /// </summary>
@@ -25,6 +26,8 @@ public class FirstSceneDialogueManager : DialogueDisplayBase
         : base(runner, dialogueText, speakerNameText, characterImage, dialogueContainer)
     {
     }
+
+    
 
     /// <summary>
     /// 推进对话
