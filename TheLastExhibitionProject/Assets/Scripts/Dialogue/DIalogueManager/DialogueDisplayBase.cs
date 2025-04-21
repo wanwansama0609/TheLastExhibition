@@ -36,8 +36,25 @@ public abstract class DialogueDisplayBase
     // 角色图像回调事件
     public System.Action<Sprite> onCharacterSpriteChanged;
 
+    // 新增：对话文本变更回调
+    public System.Action<string> onDialogueTextChanged;
+
+    // 新增：说话者名称变更回调
+    public System.Action<string> onSpeakerNameChanged;
+
+    // 证物的状态
+    protected bool isWaitingForEvidence = false;
+    protected string waitingForEvidenceId = null;
+    protected EvidenceButton activeEvidenceButton = null;
+
+    // 当前点击的证物ID
+    protected string currentClickedEvidenceId = null;
+
     // 当前对话状态
     protected int dialogueState = 0;
+    // 当前正在打字的句子ID
+    protected string activeTypingSentenceId;
+
 
     // 固定的事件ID，每个子类关联一个特定事件
     public abstract string EventId { get; }
@@ -71,6 +88,14 @@ public abstract class DialogueDisplayBase
     public void SetTypingSpeed(float speed)
     {
         this.typingSpeed = speed;
+    }
+
+    /// <summary>
+    /// 检查是否正在等待证物收集
+    /// </summary>
+    public bool IsWaitingForEvidence()
+    {
+        return isWaitingForEvidence;
     }
 
     /// <summary>
@@ -110,6 +135,7 @@ public abstract class DialogueDisplayBase
 
         // 重置对话状态
         dialogueState = 0;
+        currentClickedEvidenceId = null;
 
         Debug.Log($"已成功初始化对话事件: {EventId}，共 {dialogueData.Count} 条句子");
     }
@@ -138,12 +164,43 @@ public abstract class DialogueDisplayBase
     public abstract void AdvanceDialogue();
 
     /// <summary>
+    /// 开始监听证物点击事件
+    /// </summary>
+    protected void StartListeningForEvidenceClicks()
+    {
+        EvidenceButton.OnEvidenceClickedWithId += OnEvidenceClicked;
+    }
+
+    /// <summary>
+    /// 停止监听证物点击事件
+    /// </summary>
+    protected void StopListeningForEvidenceClicks()
+    {
+        EvidenceButton.OnEvidenceClickedWithId -= OnEvidenceClicked;
+    }
+
+    /// <summary>
+    /// 处理证物点击事件
+    /// </summary>
+    /// <param name="evidenceId">被点击的证物ID</param>
+    protected virtual void OnEvidenceClicked(string evidenceId)
+    {
+        currentClickedEvidenceId = evidenceId;
+        Debug.Log($"点击了证物: {evidenceId}");
+
+        // 子类可以重写此方法以提供具体的处理逻辑
+        // 默认行为是推进对话
+        AdvanceDialogue();
+    }
+
+    /// <summary>
     /// 显示指定ID的句子
     /// </summary>
     /// <param name="sentenceId">要显示的句子ID</param>
     protected virtual IEnumerator DisplaySentence(string sentenceId)
     {
         isDisplayingText = true;
+        activeTypingSentenceId = sentenceId;
 
         if (!dialogueData.ContainsKey(sentenceId))
         {
@@ -155,58 +212,107 @@ public abstract class DialogueDisplayBase
         // 获取句子数据
         Dictionary<string, string> attributes = dialogueData[sentenceId];
 
-        // 显示说话者名称
-        if (speakerNameText != null && attributes.ContainsKey("speaker"))
+        // 获取说话者名称
+        string speakerName = attributes.ContainsKey("speaker") ? attributes["speaker"] : null;
+
+        // 获取文本内容
+        string fullText = attributes.ContainsKey("text") ? attributes["text"] : null;
+
+        // 获取角色图像
+        Sprite characterSprite = null;
+        if (attributes.ContainsKey("sprite") && !string.IsNullOrEmpty(attributes["sprite"]))
         {
-            speakerNameText.text = attributes["speaker"];
+            characterSprite = Resources.Load<Sprite>(attributes["sprite"]);
+            if (characterSprite == null && !string.IsNullOrEmpty(attributes["sprite"]))
+            {
+                Debug.LogWarning($"无法加载角色图像: {attributes["sprite"]}");
+            }
         }
 
-        // 显示文本内容
-        if (dialogueText != null && attributes.ContainsKey("text"))
-        {
-            string fullText = attributes["text"];
+        // 分别处理各个UI元素的显示
 
+        // 1. 处理说话者名称 - 使用回调或直接设置
+        if (onSpeakerNameChanged != null)
+        {
+            onSpeakerNameChanged.Invoke(speakerName);
+        }
+        else if (speakerNameText != null)
+        {
+            if (string.IsNullOrEmpty(speakerName))
+            {
+                speakerNameText.gameObject.SetActive(false);
+            }
+            else
+            {
+                speakerNameText.gameObject.SetActive(true);
+                speakerNameText.text = speakerName;
+            }
+        }
+
+        // 2. 处理角色图像 - 使用回调
+        onCharacterSpriteChanged?.Invoke(characterSprite);
+
+        // 3. 处理对话文本 - 使用回调或直接设置
+        if (string.IsNullOrEmpty(fullText))
+        {
+            // 文本为空，隐藏文本组件
+            if (onDialogueTextChanged != null)
+            {
+                onDialogueTextChanged.Invoke(null);
+            }
+            else if (dialogueText != null)
+            {
+                dialogueText.gameObject.SetActive(false);
+            }
+        }
+        else
+        {
+            // 有文本内容，使用打字效果或直接显示
             if (useTypingEffect)
             {
+                // 先清空文本，重要修改点！
+                if (onDialogueTextChanged != null)
+                {
+                    onDialogueTextChanged.Invoke("");
+                }
+                else if (dialogueText != null)
+                {
+                    dialogueText.gameObject.SetActive(true);
+                    dialogueText.text = "";
+                }
+
                 // 使用打字机效果
-                dialogueText.text = "";
+                // 创建一个临时字符串，而不是在现有文本上添加
+                string currentText = "";
 
                 foreach (char c in fullText)
                 {
-                    dialogueText.text += c;
+                    currentText += c; // 修改点：使用临时变量累加字符
+
+                    if (onDialogueTextChanged != null)
+                    {
+                        onDialogueTextChanged.Invoke(currentText);
+                    }
+                    else if (dialogueText != null)
+                    {
+                        dialogueText.text = currentText;
+                    }
+
                     yield return new WaitForSeconds(typingSpeed);
                 }
             }
             else
             {
                 // 直接显示全部文本
-                dialogueText.text = fullText;
-            }
-        }
-
-        // 显示角色图像
-        if (characterImage != null)
-        {
-            Sprite characterSprite = null;
-
-            // 检查是否有sprite属性并尝试加载
-            if (attributes.ContainsKey("sprite") && !string.IsNullOrEmpty(attributes["sprite"]))
-            {
-                characterSprite = Resources.Load<Sprite>(attributes["sprite"]);
-            }
-
-            // 触发角色图像变更回调
-            onCharacterSpriteChanged?.Invoke(characterSprite);
-
-            // 如果加载成功显示图像
-            if (characterSprite != null)
-            {
-                characterImage.sprite = characterSprite;
-                characterImage.gameObject.SetActive(true);
-            }
-            else if (attributes.ContainsKey("sprite") && !string.IsNullOrEmpty(attributes["sprite"]))
-            {
-                Debug.LogWarning($"无法加载角色图像: {attributes["sprite"]}");
+                if (onDialogueTextChanged != null)
+                {
+                    onDialogueTextChanged.Invoke(fullText);
+                }
+                else if (dialogueText != null)
+                {
+                    dialogueText.gameObject.SetActive(true);
+                    dialogueText.text = fullText;
+                }
             }
         }
 
@@ -245,28 +351,34 @@ public abstract class DialogueDisplayBase
     /// <summary>
     /// 立即显示完整句子文本（跳过打字效果）
     /// </summary>
-    protected virtual void CompleteCurrentSentence(string sentenceId)
+    protected virtual void CompleteCurrentSentence()
     {
-        if (isDisplayingText && dialogueText != null)
+        if (isDisplayingText)
         {
-            // 停止打字效果协程
             if (typingCoroutine != null)
             {
                 StopCoroutine(typingCoroutine);
                 typingCoroutine = null;
             }
 
-            // 直接显示完整文本
-            string fullText = DialogueParser.Instance.GetSentenceAttribute(EventId, sentenceId, "text");
+            string fullText = DialogueParser.Instance.GetSentenceAttribute(EventId, activeTypingSentenceId, "text");
+
             if (!string.IsNullOrEmpty(fullText))
             {
-                dialogueText.text = fullText;
+                if (onDialogueTextChanged != null)
+                {
+                    onDialogueTextChanged.Invoke(fullText);
+                }
+                else if (dialogueText != null)
+                {
+                    dialogueText.gameObject.SetActive(true);
+                    dialogueText.text = fullText;
+                }
             }
 
             isDisplayingText = false;
 
-            // 触发句子显示完成回调
-            onSentenceDisplayed?.Invoke(sentenceId);
+            onSentenceDisplayed?.Invoke(activeTypingSentenceId);
         }
     }
 
@@ -275,6 +387,9 @@ public abstract class DialogueDisplayBase
     /// </summary>
     protected virtual void EndDialogue()
     {
+        // 确保停止监听证物点击
+        StopListeningForEvidenceClicks();
+
         // 隐藏对话UI
         if (dialogueContainer != null)
         {
@@ -323,5 +438,117 @@ public abstract class DialogueDisplayBase
     public bool IsDisplayingText()
     {
         return isDisplayingText;
+    }
+
+    /// <summary>
+    /// 设置UI组件的可见性
+    /// </summary>
+    /// <param name="visible">是否可见</param>
+    protected virtual void SetComponentsVisibility(bool visible)
+    {
+        // 设置各个组件的可见性
+        if (dialogueText != null)
+            dialogueText.gameObject.SetActive(visible);
+
+        if (speakerNameText != null)
+            speakerNameText.gameObject.SetActive(visible);
+
+        if (characterImage != null)
+            characterImage.gameObject.SetActive(visible);
+    }
+
+    /// <summary>
+    /// 放置证物并开始监听点击
+    /// </summary>
+    /// <param name="evidenceInfos">证物信息列表，包含ID、名称、描述和位置</param>
+    protected void PlaceEvidenceAndListenForClicks(List<(string id, string name, string description, Vector2 position, Vector2 size)> evidenceInfos)
+    {
+        // 放置证物
+        foreach (var info in evidenceInfos)
+        {
+            EvidenceManager.Instance.CreateEvidence(
+                info.id, info.name, info.description,
+                dialogueContainer.transform, info.position, info.size);
+        }
+
+        // 开始监听证物点击
+        StartListeningForEvidenceClicks();
+
+        // 暂时禁用普通点击推进对话
+        DialogueController.Instance.SetInputEnabled(false);
+    }
+
+    /// <summary>
+    /// 清理证物并停止监听点击
+    /// </summary>
+    protected void CleanupEvidenceAndStopListening()
+    {
+        // 停止监听证物点击
+        StopListeningForEvidenceClicks();
+
+        // 销毁所有证物
+        EvidenceManager.Instance.DestroyAllEvidence();
+
+        // 重新启用普通点击推进对话
+        DialogueController.Instance.SetInputEnabled(true);
+    }
+
+    /// <summary>
+    /// 等待证物被收集后推进对话
+    /// </summary>
+    /// <param name="evidenceId">需要收集的证物ID</param>
+    /// <param name="name">证物名称</param>
+    /// <param name="description">证物描述</param>
+    /// <param name="position">放置位置</param>
+    /// <param name="size">证物大小</param>
+    protected virtual IEnumerator WaitForEvidenceCollection(string evidenceId, string name, string description,
+                                                           Vector2 position, Vector2 size)
+    {
+        // 注册证物收集事件
+        EvidenceManager.Instance.OnEvidenceCollected += OnEvidenceCollected;
+
+        // 创建证物
+        activeEvidenceButton = EvidenceManager.Instance.CreateEvidence(
+            evidenceId, name, description,
+            dialogueContainer.transform, position, size);
+
+        // 保存需要等待收集的证物ID
+        waitingForEvidenceId = evidenceId;
+
+        // 等待证物被收集
+        isWaitingForEvidence = true;
+
+        // 等待直到证物被收集
+        while (isWaitingForEvidence)
+        {
+            yield return null;
+        }
+
+        // 取消注册事件
+        EvidenceManager.Instance.OnEvidenceCollected -= OnEvidenceCollected;
+
+        // 销毁证物按钮（可选，视游戏需求而定）
+        if (activeEvidenceButton != null)
+        {
+            EvidenceManager.Instance.DestroyEvidence(evidenceId);
+            activeEvidenceButton = null;
+        }
+    }
+
+    // 证物收集回调
+    private void OnEvidenceCollected(string collectedEvidenceId)
+    {
+        // 检查是否是我们正在等待的证物
+        if (isWaitingForEvidence && collectedEvidenceId == waitingForEvidenceId)
+        {
+            // 停止等待
+            isWaitingForEvidence = false;
+        }
+    }
+
+    // 简化版方法，使用默认大小
+    protected virtual IEnumerator WaitForEvidenceCollection(string evidenceId, string name, string description, Vector2 position)
+    {
+        return WaitForEvidenceCollection(evidenceId, name, description, position, new Vector2(100, 100));
     }
 }

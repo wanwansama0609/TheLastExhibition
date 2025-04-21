@@ -1,33 +1,32 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
+using UnityEngine.UI;
 
 /// <summary>
-/// 证物管理器，负责管理所有证物的状态和信息
-/// 纯工具类，不涉及对话流程控制
+/// 证物管理器，负责创建、放置和销毁证物
 /// </summary>
 public class EvidenceManager : MonoBehaviour
 {
     // 单例实例
     public static EvidenceManager Instance { get; private set; }
 
-    [Header("证物设置")]
-    [SerializeField] private GameObject evidenceButtonPrefab; // 证物按钮预制体
-    [SerializeField] private Transform evidenceParent; // 证物按钮的父物体
+    [Header("预制体设置")]
+    [SerializeField] private GameObject evidencePrefab; // 证物按钮预制体
 
-    // 已解锁的证物列表
-    private HashSet<string> unlockedEvidences = new HashSet<string>();
+    // 当前场景中的所有证物
+    private Dictionary<string, EvidenceButton> activeEvidence = new Dictionary<string, EvidenceButton>();
 
-    // 证物数据字典，存储所有证物的信息
-    private Dictionary<string, EvidenceData> evidenceDatabase = new Dictionary<string, EvidenceData>();
+    // 已解锁的证物ID列表
+    private HashSet<string> unlockedEvidence = new HashSet<string>();
 
-    // 证物解锁事件
-    public event Action<string> OnEvidenceUnlocked;
+    // 证物被收集的事件委托
+    public delegate void EvidenceCollectedDelegate(string evidenceId);
+    public event EvidenceCollectedDelegate OnEvidenceCollected;
 
     private void Awake()
     {
-        // 设置单例
+        // 单例模式初始化
         if (Instance == null)
         {
             Instance = this;
@@ -39,175 +38,168 @@ public class EvidenceManager : MonoBehaviour
             return;
         }
 
-        // 初始化证物数据
-        InitializeEvidenceDatabase();
+        // 订阅证物点击事件
+        EvidenceButton.OnEvidenceClickedWithId += HandleEvidenceClicked;
+    }
+
+    private void OnDestroy()
+    {
+        // 取消订阅事件
+        EvidenceButton.OnEvidenceClickedWithId -= HandleEvidenceClicked;
     }
 
     /// <summary>
-    /// 初始化证物数据库
+    /// 处理证物被点击的事件
     /// </summary>
-    private void InitializeEvidenceDatabase()
+    private void HandleEvidenceClicked(string evidenceId)
     {
-        // 这里可以从JSON或ScriptableObject加载证物数据
-        // 临时演示数据
-        evidenceDatabase.Add("evidence_001", new EvidenceData
-        {
-            Id = "evidence_001",
-            Name = "破损的信件",
-            Description = "一封被撕碎的信件，上面有模糊的字迹。"
-        });
+        // 标记为已解锁
+        unlockedEvidence.Add(evidenceId);
 
-        evidenceDatabase.Add("evidence_002", new EvidenceData
-        {
-            Id = "evidence_002",
-            Name = "神秘钥匙",
-            Description = "一把古老的钥匙，不知道能打开什么。"
-        });
-
-        evidenceDatabase.Add("evidence_003", new EvidenceData
-        {
-            Id = "evidence_003",
-            Name = "指纹痕迹",
-            Description = "在桌子上发现的清晰指纹。"
-        });
+        // 转发事件
+        OnEvidenceCollected?.Invoke(evidenceId);
     }
 
     /// <summary>
-    /// 创建证物按钮
+    /// 创建证物按钮并放置在指定位置
     /// </summary>
-    public GameObject CreateEvidenceButton(string evidenceId, Vector2 position, float width, float height)
+    /// <param name="evidenceId">证物ID</param>
+    /// <param name="name">证物名称</param>
+    /// <param name="description">证物描述</param>
+    /// <param name="parent">父物体Transform</param>
+    /// <param name="position">位置</param>
+    /// <param name="size">大小</param>
+    /// <returns>创建的证物按钮组件</returns>
+    public EvidenceButton CreateEvidence(string evidenceId, string name, string description,
+                                         Transform parent, Vector2 position, Vector2 size)
     {
-        if (!evidenceDatabase.ContainsKey(evidenceId))
+        // 检查是否已存在相同ID的证物
+        if (activeEvidence.ContainsKey(evidenceId))
         {
-            Debug.LogError($"证物ID不存在: {evidenceId}");
-            return null;
+            Debug.LogWarning($"证物已存在: {evidenceId}");
+            return activeEvidence[evidenceId];
         }
 
         // 实例化预制体
-        GameObject buttonObj = Instantiate(evidenceButtonPrefab, evidenceParent);
-        EvidenceButton button = buttonObj.GetComponent<EvidenceButton>();
+        GameObject evidenceObj = Instantiate(evidencePrefab, parent);
+        evidenceObj.SetActive(true);
 
-        if (button != null)
+        // 获取EvidenceButton组件
+        EvidenceButton evidenceButton = evidenceObj.GetComponent<EvidenceButton>();
+
+        if (evidenceButton != null)
         {
             // 设置证物信息
-            EvidenceData data = evidenceDatabase[evidenceId];
-            button.SetEvidence(data.Id, data.Name, data.Description);
+            evidenceButton.SetEvidence(evidenceId, name, description);
 
             // 设置位置和大小
-            button.SetPosition(position);
-            button.SetSize(width, height);
+            evidenceButton.SetPosition(position);
+            evidenceButton.SetSize(size.x, size.y);
+
+            // 设置收集状态
+            evidenceButton.SetCollected(IsEvidenceUnlocked(evidenceId));
+
+            // 添加到活跃证物字典
+            activeEvidence[evidenceId] = evidenceButton;
+
+            return evidenceButton;
         }
 
-        return buttonObj;
+        Debug.LogError($"创建证物失败: {evidenceId}");
+        Destroy(evidenceObj);
+        return null;
     }
 
     /// <summary>
-    /// 解锁证物
+    /// 创建证物按钮 - 简化版本，使用默认大小
     /// </summary>
-    public void UnlockEvidence(string evidenceId)
+    public EvidenceButton CreateEvidence(string evidenceId, string name, string description, Transform parent, Vector2 position)
     {
-        if (!evidenceDatabase.ContainsKey(evidenceId))
-        {
-            Debug.LogError($"尝试解锁不存在的证物: {evidenceId}");
-            return;
-        }
-
-        if (unlockedEvidences.Contains(evidenceId))
-        {
-            Debug.Log($"证物已经解锁: {evidenceId}");
-            return;
-        }
-
-        // 添加到已解锁集合
-        unlockedEvidences.Add(evidenceId);
-
-        // 触发解锁事件
-        OnEvidenceUnlocked?.Invoke(evidenceId);
-
-        Debug.Log($"解锁证物: {evidenceId} - {evidenceDatabase[evidenceId].Name}");
+        // 使用默认大小 100x100
+        return CreateEvidence(evidenceId, name, description, parent, position, new Vector2(100, 100));
     }
 
     /// <summary>
-    /// 清除所有证物按钮
+    /// 销毁特定ID的证物
     /// </summary>
-    public void ClearAllEvidenceButtons()
+    public void DestroyEvidence(string evidenceId)
     {
-        if (evidenceParent == null)
-            return;
-
-        foreach (Transform child in evidenceParent)
+        if (activeEvidence.TryGetValue(evidenceId, out EvidenceButton evidenceButton))
         {
-            Destroy(child.gameObject);
+            if (evidenceButton != null && evidenceButton.gameObject != null)
+            {
+                Destroy(evidenceButton.gameObject);
+            }
+
+            activeEvidence.Remove(evidenceId);
         }
     }
 
     /// <summary>
-    /// 检查证物是否已解锁
+    /// 销毁所有活跃的证物
+    /// </summary>
+    public void DestroyAllEvidence()
+    {
+        foreach (var evidence in activeEvidence.Values)
+        {
+            if (evidence != null && evidence.gameObject != null)
+            {
+                Destroy(evidence.gameObject);
+            }
+        }
+
+        activeEvidence.Clear();
+    }
+
+    /// <summary>
+    /// 检查证物是否已被解锁
     /// </summary>
     public bool IsEvidenceUnlocked(string evidenceId)
     {
-        return unlockedEvidences.Contains(evidenceId);
+        return unlockedEvidence.Contains(evidenceId);
     }
 
     /// <summary>
-    /// 获取证物信息
+    /// 手动解锁证物
     /// </summary>
-    public EvidenceData GetEvidenceData(string evidenceId)
+    public void UnlockEvidence(string evidenceId)
     {
-        if (evidenceDatabase.TryGetValue(evidenceId, out EvidenceData data))
+        if (!unlockedEvidence.Contains(evidenceId))
         {
-            return data;
+            unlockedEvidence.Add(evidenceId);
+
+            // 如果证物当前在场景中，更新其状态
+            if (activeEvidence.TryGetValue(evidenceId, out EvidenceButton button))
+            {
+                button.SetCollected(true);
+            }
+
+            // 触发事件
+            OnEvidenceCollected?.Invoke(evidenceId);
+        }
+    }
+
+    /// <summary>
+    /// 获取活跃的证物按钮
+    /// </summary>
+    public EvidenceButton GetEvidenceButton(string evidenceId)
+    {
+        if (activeEvidence.TryGetValue(evidenceId, out EvidenceButton button))
+        {
+            return button;
         }
         return null;
     }
 
     /// <summary>
-    /// 获取所有已解锁证物的ID
+    /// 从Resources文件夹加载预制体
     /// </summary>
-    public List<string> GetAllUnlockedEvidenceIds()
+    public void LoadEvidencePrefab(string prefabPath = "Prefabs/EvidenceButton")
     {
-        return new List<string>(unlockedEvidences);
-    }
-
-    /// <summary>
-    /// 重置所有证物解锁状态
-    /// </summary>
-    public void ResetAllEvidences()
-    {
-        unlockedEvidences.Clear();
-        ClearAllEvidenceButtons();
-    }
-
-    /// <summary>
-    /// 添加新的证物到数据库
-    /// </summary>
-    public void AddEvidenceToDatabase(EvidenceData evidenceData)
-    {
-        if (evidenceData == null || string.IsNullOrEmpty(evidenceData.Id))
+        evidencePrefab = Resources.Load<GameObject>(prefabPath);
+        if (evidencePrefab == null)
         {
-            Debug.LogError("无法添加无效的证物数据");
-            return;
-        }
-
-        if (evidenceDatabase.ContainsKey(evidenceData.Id))
-        {
-            evidenceDatabase[evidenceData.Id] = evidenceData; // 更新现有数据
-        }
-        else
-        {
-            evidenceDatabase.Add(evidenceData.Id, evidenceData); // 添加新数据
+            Debug.LogError($"无法加载证物预制体: {prefabPath}");
         }
     }
-}
-
-/// <summary>
-/// 证物数据结构
-/// </summary>
-[System.Serializable]
-public class EvidenceData
-{
-    public string Id;
-    public string Name;
-    public string Description;
-    public Sprite Icon; // 证物图标
 }

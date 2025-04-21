@@ -17,19 +17,24 @@ public class DialogueController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI speakerNameText;
     [SerializeField] private UnityEngine.UI.Image characterImage;
     [SerializeField] private GameObject dialogueContainer;
-
+    [SerializeField] private RectTransform evidencePanel;
 
     [Header("Dialog Settings")]
     [SerializeField] private float typingSpeed = 0.05f;
     [SerializeField] private bool useTypingEffect = true;
     [SerializeField] private float inputCooldown = 0.2f;
 
+    // 添加到 DialogueController 类中
+    private bool inputEnabled = true;
+
     // 当前活跃的对话显示器
     private DialogueDisplayBase activeDisplayer;
+    private EvidenceManager evidenceManager;
 
     // 对话显示器缓存，用于避免重复创建
     private Dictionary<string, DialogueDisplayBase> displayerCache =
         new Dictionary<string, DialogueDisplayBase>();
+
 
     // 输入冷却计时器
     private float lastInputTime = 0f;
@@ -59,12 +64,22 @@ public class DialogueController : MonoBehaviour
 
         // 初始时隐藏对话面板
         dialogueContainer.SetActive(false);
-    }
 
+        // 获取证物管理器引用
+        evidenceManager = EvidenceManager.Instance;
+        if (evidenceManager == null)
+        {
+            Debug.LogError("未找到EvidenceManager实例");
+        }
+    }
+    public void SetInputEnabled(bool enabled)
+    {
+        inputEnabled = enabled;
+    }
     private void Update()
     {
         // 只有在对话活跃时才检测输入
-        if (isDialogueActive && activeDisplayer != null)
+        if (isDialogueActive && activeDisplayer != null && inputEnabled)
         {
             // 检查是否超过输入冷却时间
             if (Time.time - lastInputTime >= inputCooldown)
@@ -85,6 +100,8 @@ public class DialogueController : MonoBehaviour
     /// <param name="eventId">对话事件ID</param>
     public async void StartDialogue(string eventId)
     {
+
+
         // 保存当前对话事件ID
         currentDialogueEventId = eventId;
 
@@ -134,10 +151,10 @@ public class DialogueController : MonoBehaviour
 
             case "FirstScene":
                 newDisplayer = new FirstSceneDialogueManager(
-                    this, dialogueText, speakerNameText, characterImage, dialogueContainer);
+                    this, dialogueText, speakerNameText, characterImage, dialogueContainer, evidencePanel);
                 break;
 
-            
+
 
             // 添加其他对话管理器的case
             // case "EventA":
@@ -174,8 +191,12 @@ public class DialogueController : MonoBehaviour
         // 设置对话完成回调
         displayer.SetDialogueCompleteCallback(OnDialogueComplete);
 
-        // 设置角色图像回调 - 现在可以直接对所有类型的对话显示器使用
+        // 设置角色图像回调
         displayer.onCharacterSpriteChanged = OnCharacterSpriteChanged;
+
+        // 设置新增的回调
+        displayer.onDialogueTextChanged = OnDialogueTextChanged;
+        displayer.onSpeakerNameChanged = OnSpeakerNameChanged;
     }
 
     /// <summary>
@@ -196,8 +217,50 @@ public class DialogueController : MonoBehaviour
         {
             // 如果sprite有效，启用图像组件
             characterImage.gameObject.SetActive(true);
+            characterImage.sprite = sprite;
+        }
+    }
 
-            // sprite已在DialogueDisplayBase中设置
+    /// <summary>
+    /// 处理对话文本变更事件
+    /// </summary>
+    /// <param name="text">对话文本，可能为空</param>
+    private void OnDialogueTextChanged(string text)
+    {
+        if (dialogueText == null || dialogueContainer == null)
+            return;
+
+        if (string.IsNullOrEmpty(text))
+        {
+            dialogueContainer.SetActive(false); // 改成隐藏整个对话面板
+        }
+        else
+        {
+            dialogueContainer.SetActive(true);
+            dialogueText.gameObject.SetActive(true);
+            dialogueText.text = text;
+        }
+    }
+
+    /// <summary>
+    /// 处理说话者名称变更事件
+    /// </summary>
+    /// <param name="speakerName">说话者名称，可能为空</param>
+    private void OnSpeakerNameChanged(string speakerName)
+    {
+        if (speakerNameText == null)
+            return;
+
+        if (string.IsNullOrEmpty(speakerName))
+        {
+            // 如果名称为空，停用名称组件
+            speakerNameText.gameObject.SetActive(false);
+        }
+        else
+        {
+            // 如果名称有效，启用名称组件
+            speakerNameText.gameObject.SetActive(true);
+            speakerNameText.text = speakerName;
         }
     }
 
@@ -232,6 +295,12 @@ public class DialogueController : MonoBehaviour
         currentDialogueEventId = null;
 
         Debug.Log($"对话已完成，已释放资源: {eventId}");
+
+        // 清理当前场景中的所有证物
+        if (evidenceManager != null)
+        {
+            evidenceManager.DestroyAllEvidence();
+        }
     }
 
     /// <summary>
@@ -250,6 +319,7 @@ public class DialogueController : MonoBehaviour
     /// </summary>
     public void EndCurrentDialogue()
     {
+
         // 隐藏对话UI
         dialogueContainer.SetActive(false);
         isDialogueActive = false;
@@ -286,6 +356,20 @@ public class DialogueController : MonoBehaviour
                 OnDialogueComplete();
                 callback?.Invoke();
             });
+        }
+    }
+
+
+    /// <summary>
+    /// 处理证物收集事件
+    /// </summary>
+    private void OnEvidenceCollected(string evidenceId)
+    {
+        // 如果当前有活跃的对话显示器且它正在等待证物收集
+        if (activeDisplayer != null && activeDisplayer.IsWaitingForEvidence())
+        {
+            // 有可能需要执行一些额外的逻辑
+            // 例如播放音效、显示提示等
         }
     }
 }

@@ -98,9 +98,93 @@
     },
     {
       "id": "sentence_017",
-      "speaker": "coachman",
-      "text": "Thank you, Mr. Cliston, Miss Vesey. Everything is in order. Sir Bright has made all the necessary arrangements for your journey. Please allow me to escort you to the carriage.",
+      "speaker": "Dorian Christon",
+      "text": "Found it. This is Sir Bright's invitation letter—please have a look.",
       "sprite": "character_smile"
+    },
+    {
+      "id": "empty",
+      "speaker": "",
+      "text": "",
+      "sprite": ""
+    },
+    {
+      "id": "sentence_018",
+      "speaker": "",
+      "text": "To the esteemed Christon,",
+      "sprite": ""
+    },
+    {
+      "id": "sentence_019",
+      "speaker": "",
+      "text": "With the utmost sincerity, I extend this invitation for you to be among the first distinguished guests to grace the halls of The Bright Museum Hotel on the 18th of August, 1900, for an exclusive two-day, one-night stay.",
+      "sprite": ""
+    },
+    {
+      "id": "sentence_020",
+      "speaker": "",
+      "text": "At eleven o’clock noon, a carriage shall be arranged to receive you at [designated station] and escort you to the estate. Upon arrival, you will have the privilege of an intimate tour of the museum’s treasured collection. In the evening, a grand banquet shall be held in the dining hall. The following morning, a delightful breakfast and a day of leisure await you, ensuring a most distinguished and tranquil experience.",
+      "sprite": ""
+    },
+    {
+      "id": "sentence_021",
+      "speaker": "",
+      "text": "Your presence would be a profound honour. Kindly confirm your attendance at your earliest convenience, so that the necessary arrangements may be made.",
+      "sprite": ""
+    },
+    {
+      "id": "sentence_022",
+      "speaker": "",
+      "text": "Sir Bright",
+      "sprite": ""
+    },
+    {
+      "id": "sentence_023",
+      "speaker": "",
+      "text": "Bright House, London",
+      "sprite": ""
+    },
+    {
+      "id": "sentence_024",
+      "speaker": "coachman",
+      "text": "Thank you, Mr. Creston, Miss Vessy. Everything is in order. Sir Bright has made proper arrangements for your journey. Allow me to escort you to the carriage.",
+      "sprite": ""
+    },
+    {
+      "id": "sentence_025",
+      "speaker": "Annabel Vesey",
+      "text": "That's great, Mr. Creston! I can't wait to see what the hotel is like.",
+      "sprite": ""
+    },
+    {
+      "id": "evidence_plant",
+      "speaker": "Dorian Christon",
+      "text": "A pot of greenery placed somewhat casually. It actually looks more lively than the other furnishings around here.",
+      "sprite": ""
+    },
+    {
+      "id": "evidence_sign1",
+      "speaker": "Dorian Christon",
+      "text": "This bulletin board is empty — it seems there aren’t many events worth noting today.",
+      "sprite": ""
+    },
+    {
+      "id": "evidence_sign2",
+      "speaker": "Dorian Christon",
+      "text": "There’s something posted on this bulletin board, but the writing is a bit blurry. Never mind, better find the invitation letter first.",
+      "sprite": ""
+    },
+    {
+      "id": "evidence_shelf",
+      "speaker": "Dorian Christon",
+      "text": "A row of small compartments with numbered tags inserted — perhaps used to mark rooms, luggage, or the arrival and departure of guests.",
+      "sprite": ""
+    },
+    {
+      "id": "evidence_bell",
+      "speaker": "Dorian Christon",
+      "text": "A brass reception bell, polished to a shine — as if it was just wiped clean. But right now, finding the invitation letter is more important...",
+      "sprite": ""
     }
   ]
 }

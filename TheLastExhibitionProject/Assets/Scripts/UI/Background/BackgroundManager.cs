@@ -20,6 +20,13 @@ public class BackgroundManager : MonoBehaviour
     private int currentBackgroundIndex = 0;
     private bool isTransitioning = false;
 
+    public static BackgroundManager Instance { get; private set; }
+
+    private void Awake()
+    {
+        Instance = this;
+    }
+
     private void Start()
     {
         // 确保背景图片位于Canvas层级最底部（最先渲染）

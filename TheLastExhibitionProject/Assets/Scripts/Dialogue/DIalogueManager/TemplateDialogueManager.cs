@@ -36,7 +36,7 @@ public class TemplateDialogueManager : DialogueDisplayBase
         // 如果正在显示文本，则立即完成当前句子显示
         if (IsDisplayingText())
         {
-            CompleteCurrentSentence(currentSentenceId);
+            CompleteCurrentSentence();
             return;
         }
 

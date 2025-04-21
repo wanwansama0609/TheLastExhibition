@@ -3,44 +3,60 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 游戏主控脚本，使用单一的switch-case链式结构控制整个游戏流程
-/// 包括对话和搜证流程
+/// 当前仅包含对话流程，搜证部分已注释
 /// </summary>
 public class TheLastExhibition : MonoBehaviour
 {
+    /* 搜证场景部分 - 暂时注释掉
     [Header("搜证场景管理器")]
     [SerializeField] private GameObject evidenceSceneManager; // 单一的GameObject引用
 
     // 搜证场景组件引用（通过GetComponent获取）
-    private LivingRoomEvidenceScene livingRoomScene;
+    private TemplateEvidenceScene TemplateScene;
+    
+    // 当前活动的搜证场景
+    private EvidenceSceneBase currentScene;
+    */
 
     [Header("UI组件")]
     [SerializeField] private Button startButton;        // 开始按钮
     [SerializeField] private GameObject panelToDisable;  // 需要禁用的面板
+    [SerializeField] private BackgroundManager bgManager;
 
-    // 当前活动的搜证场景
-    private EvidenceSceneBase currentScene;
-
-    // 流程状态枚举（整合了对话和搜证所有状态）
+    // 流程状态枚举
     public enum GameFlowState
     {
-        MainMenu,                // 主菜单
-        OpeningDialogue,         // 开场对话
+        MainMenu,           // 主菜单
+        FirstScene,         // 第一场对话
+        SecondScene,        // 第二场对话
+        ThirdScene,         // 第三场对话
+        /* 搜证场景部分 - 暂时注释掉
         LivingRoomInvestigation, // 客厅搜证
         AfterLivingRoomDialogue  // 客厅搜证后对话
+        */
     }
 
     // 当前游戏状态
     private GameFlowState currentState = GameFlowState.MainMenu;
+
 
     // 对话ID映射
     private string GetDialogueIdForState(GameFlowState state)
     {
         switch (state)
         {
+            case GameFlowState.FirstScene:
+                return "FirstScene";
+            case GameFlowState.SecondScene:
+                return "SecondScene";
+            case GameFlowState.ThirdScene:
+                return "ThirdScene";
+            /* 搜证场景部分 - 暂时注释掉
             case GameFlowState.OpeningDialogue:
                 return "FirstScene";
             case GameFlowState.AfterLivingRoomDialogue:
                 return "AfterLivingRoom";
+            */
             default:
                 return "";
         }
@@ -51,8 +67,11 @@ public class TheLastExhibition : MonoBehaviour
         // 确保必要的系统组件存在
         InitializeRequiredSystems();
 
+        bgManager = GetComponent<BackgroundManager>();
+        /* 搜证场景部分 - 暂时注释掉
         // 获取所有搜证场景组件
         InitializeEvidenceScenes();
+        */
 
         // 为开始按钮添加点击事件
         if (startButton != null)
@@ -69,25 +88,8 @@ public class TheLastExhibition : MonoBehaviour
         {
             DialogueController.Instance.OnDialogueEnd += HandleDialogueEnd;
         }
-    }
 
-    /// <summary>
-    /// 初始化所有搜证场景组件
-    /// </summary>
-    private void InitializeEvidenceScenes()
-    {
-        if (evidenceSceneManager == null)
-        {
-            Debug.LogError("未设置搜证场景管理器，请在Inspector中指定EvidenceSceneManager");
-            return;
-        }
-
-        // 获取所有搜证场景组件
-        livingRoomScene = evidenceSceneManager.GetComponent<LivingRoomEvidenceScene>();
-
-        // 检查是否所有组件都成功获取
-        if (livingRoomScene == null)
-            Debug.LogError("未找到LivingRoomEvidenceScene组件");
+        bgManager.SwitchToBackground(0);
     }
 
     private void OnDestroy()
@@ -98,11 +100,13 @@ public class TheLastExhibition : MonoBehaviour
             DialogueController.Instance.OnDialogueEnd -= HandleDialogueEnd;
         }
 
+        /* 搜证场景部分 - 暂时注释掉
         // 清除搜证场景事件监听
         if (currentScene != null)
         {
             currentScene.OnAllEvidenceCollected -= HandleInvestigationCompleted;
         }
+        */
     }
 
     /// <summary>
@@ -149,7 +153,7 @@ public class TheLastExhibition : MonoBehaviour
         DisablePanelAndChildren();
 
         // 设置初始状态并处理流程
-        SetState(GameFlowState.OpeningDialogue);
+        SetState(GameFlowState.FirstScene);
     }
 
     /// <summary>
@@ -193,20 +197,24 @@ public class TheLastExhibition : MonoBehaviour
                 // 主菜单状态，不做特殊处理
                 break;
 
-            case GameFlowState.OpeningDialogue:
-                // 开场对话
+            case GameFlowState.FirstScene:
+            case GameFlowState.SecondScene:
+            case GameFlowState.ThirdScene:
+                // 启动对应的对话
                 StartDialogue(GetDialogueIdForState(currentState));
                 break;
 
-            case GameFlowState.LivingRoomInvestigation:
-                // 客厅搜证
-                StartInvestigation(livingRoomScene);
-                break;
+                /* 搜证场景部分 - 暂时注释掉
+                case GameFlowState.LivingRoomInvestigation:
+                    // 客厅搜证
+                    StartInvestigation(TemplateScene);
+                    break;
 
-            case GameFlowState.AfterLivingRoomDialogue:
-                // 客厅搜证后的对话
-                StartDialogue(GetDialogueIdForState(currentState));
-                break;
+                case GameFlowState.AfterLivingRoomDialogue:
+                    // 客厅搜证后的对话
+                    StartDialogue(GetDialogueIdForState(currentState));
+                    break;
+                */
         }
     }
 
@@ -220,32 +228,33 @@ public class TheLastExhibition : MonoBehaviour
         // 根据当前状态决定下一个状态
         switch (currentState)
         {
-            case GameFlowState.OpeningDialogue:
-                // 开场对话结束后进入客厅搜证
-                SetState(GameFlowState.LivingRoomInvestigation);
+            case GameFlowState.FirstScene:
+                // 第一场对话结束后进入第二场对话
+                SetState(GameFlowState.SecondScene);
                 break;
 
-            case GameFlowState.AfterLivingRoomDialogue:
-                // 客厅搜证后对话结束后，可以在这里添加下一步逻辑
+            case GameFlowState.SecondScene:
+                // 第二场对话结束后进入第三场对话
+                SetState(GameFlowState.ThirdScene);
+                break;
+
+            case GameFlowState.ThirdScene:
+                // 第三场对话结束后，游戏流程结束
                 Debug.Log("游戏流程结束");
+                // 可以在这里添加结束游戏的逻辑，如显示结束画面、返回主菜单等
                 break;
-        }
-    }
 
-    /// <summary>
-    /// 处理搜证完成事件
-    /// </summary>
-    private void HandleInvestigationCompleted(string sceneId)
-    {
-        Debug.Log($"搜证完成: {sceneId}");
+                /* 搜证场景部分 - 暂时注释掉
+                case GameFlowState.OpeningDialogue:
+                    // 开场对话结束后进入客厅搜证
+                    SetState(GameFlowState.LivingRoomInvestigation);
+                    break;
 
-        // 根据当前状态决定下一个状态
-        switch (currentState)
-        {
-            case GameFlowState.LivingRoomInvestigation:
-                // 客厅搜证完成后进入客厅后对话
-                SetState(GameFlowState.AfterLivingRoomDialogue);
-                break;
+                case GameFlowState.AfterLivingRoomDialogue:
+                    // 客厅搜证后对话结束后，可以在这里添加下一步逻辑
+                    Debug.Log("游戏流程结束");
+                    break;
+                */
         }
     }
 
@@ -262,6 +271,59 @@ public class TheLastExhibition : MonoBehaviour
         else
         {
             Debug.LogError("DialogueController不存在或对话ID为空，无法启动对话");
+        }
+    }
+
+    /// <summary>
+    /// 获取当前游戏状态
+    /// </summary>
+    public GameFlowState GetCurrentState()
+    {
+        return currentState;
+    }
+
+    /// <summary>
+    /// 手动设置游戏状态（用于调试）
+    /// </summary>
+    public void JumpToState(GameFlowState state)
+    {
+        SetState(state);
+    }
+
+    /* 搜证场景部分 - 暂时注释掉
+    /// <summary>
+    /// 初始化所有搜证场景组件
+    /// </summary>
+    private void InitializeEvidenceScenes()
+    {
+        if (evidenceSceneManager == null)
+        {
+            Debug.LogError("未设置搜证场景管理器，请在Inspector中指定EvidenceSceneManager");
+            return;
+        }
+
+        // 获取所有搜证场景组件
+        TemplateScene = evidenceSceneManager.GetComponent<TemplateEvidenceScene>();
+
+        // 检查是否所有组件都成功获取
+        if (TemplateScene == null)
+            Debug.LogError("未找到TemplateEvidenceScene组件");
+    }
+
+    /// <summary>
+    /// 处理搜证完成事件
+    /// </summary>
+    private void HandleInvestigationCompleted(string sceneId)
+    {
+        Debug.Log($"搜证完成: {sceneId}");
+
+        // 根据当前状态决定下一个状态
+        switch (currentState)
+        {
+            case GameFlowState.LivingRoomInvestigation:
+                // 客厅搜证完成后进入客厅后对话
+                SetState(GameFlowState.AfterLivingRoomDialogue);
+                break;
         }
     }
 
@@ -293,20 +355,5 @@ public class TheLastExhibition : MonoBehaviour
 
         Debug.Log($"开始搜证: {currentScene.GetSceneId()}");
     }
-
-    /// <summary>
-    /// 获取当前游戏状态
-    /// </summary>
-    public GameFlowState GetCurrentState()
-    {
-        return currentState;
-    }
-
-    /// <summary>
-    /// 手动设置游戏状态（用于调试）
-    /// </summary>
-    public void JumpToState(GameFlowState state)
-    {
-        SetState(state);
-    }
+    */
 }

@@ -15,7 +15,6 @@ public class EvidenceButton : MonoBehaviour, IPointerClickHandler, IPointerEnter
     [SerializeField] private string evidenceDescription; // 证物描述
 
     [Header("游标设置")]
-    [SerializeField] private Texture2D normalCursor; // 默认光标
     [SerializeField] private Texture2D interactiveCursor; // 可交互光标（未收集）
     [SerializeField] private Texture2D collectedCursor; // 已收集光标
     [SerializeField] private Vector2 cursorHotspot = Vector2.zero; // 光标热点
@@ -24,8 +23,8 @@ public class EvidenceButton : MonoBehaviour, IPointerClickHandler, IPointerEnter
     private bool isCollected = false;
 
     // 点击事件委托
-    public delegate void EvidenceClickedDelegate(string evidenceId);
-    public static event EvidenceClickedDelegate OnEvidenceClicked;
+    public delegate void EvidenceClickedWithIdDelegate(string evidenceId);
+    public static event EvidenceClickedWithIdDelegate OnEvidenceClickedWithId;
 
     private void Start()
     {
@@ -48,15 +47,21 @@ public class EvidenceButton : MonoBehaviour, IPointerClickHandler, IPointerEnter
     /// </summary>
     public void OnPointerClick(PointerEventData eventData)
     {
+
+
         // 如果已经被收集过了，不再触发收集逻辑
         if (isCollected)
+        {
+            // 触发证物点击事件，直接传递ID
+            OnEvidenceClickedWithId?.Invoke(evidenceId);
             return;
+        }
 
         // 标记为已收集，防止重复点击触发
         isCollected = true;
 
-        // 触发证物点击事件
-        OnEvidenceClicked?.Invoke(evidenceId);
+        // 触发证物点击事件，直接传递ID
+        OnEvidenceClickedWithId?.Invoke(evidenceId);
 
         // 播放点击音效（如果有）
         PlayClickSound();
@@ -71,16 +76,12 @@ public class EvidenceButton : MonoBehaviour, IPointerClickHandler, IPointerEnter
     public void OnPointerEnter(PointerEventData eventData)
     {
         // 只有当所有光标纹理都有效时才修改光标
-        if (normalCursor != null && interactiveCursor != null && collectedCursor != null)
+        if (interactiveCursor != null && collectedCursor != null)
         {
             // 设置适当的光标
             if (isCollected)
             {
-                Cursor.SetCursor(collectedCursor, cursorHotspot, CursorMode.Auto);
-            }
-            else
-            {
-                Cursor.SetCursor(interactiveCursor, cursorHotspot, CursorMode.Auto);
+                Cursor.SetCursor(isCollected ? collectedCursor : interactiveCursor, cursorHotspot, CursorMode.Auto);
             }
         }
     }
@@ -90,11 +91,7 @@ public class EvidenceButton : MonoBehaviour, IPointerClickHandler, IPointerEnter
     /// </summary>
     public void OnPointerExit(PointerEventData eventData)
     {
-        // 只有当所有光标纹理都有效时才恢复光标
-        if (normalCursor != null && interactiveCursor != null && collectedCursor != null)
-        {
-            Cursor.SetCursor(normalCursor, cursorHotspot, CursorMode.Auto);
-        }
+        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto); // 还原为系统默认光标
     }
 
     /// <summary>
